@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard · Paper Trader{% endblock %}
+{% block content %}
+  <div class="grid">
+    <div class="card">
+      <h2>Prices</h2>
+      <div id="prices" hx-get="{{ url_for('prices_partial') }}" hx-trigger="load, every 5s" hx-swap="innerHTML">
+        Loading prices...
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Place Order</h2>
+      <div id="order-form">
+        <form hx-post="{{ url_for('place_order') }}" hx-target="#order-form" hx-swap="innerHTML">
+          <label>Symbol</label><br>
+          <select name="symbol">
+            {% for t in tickers %}
+              <option value="{{ t.symbol }}">{{ t.symbol }}</option>
+            {% endfor %}
+          </select><br><br>
+
+          <label>Side</label><br>
+          <select name="side">
+            <option value="BUY">Buy</option>
+            <option value="SELL">Sell</option>
+          </select><br><br>
+
+          <label>Type</label><br>
+          <select name="order_type">
+            <option value="MKT">Market</option>
+            <option value="LMT">Limit</option>
+          </select><br><br>
+
+          <label>Qty</label><br>
+          <input type="number" name="qty" min="1" value="1" /><br><br>
+
+          <label>Limit Price (for LMT)</label><br>
+          <input type="text" name="limit_price" placeholder="e.g. 123.45" /><br><br>
+
+          <button type="submit">Submit</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Your Positions</h2>
+    <div id="positions" hx-get="{{ url_for('positions_partial') }}" hx-trigger="load, every 6s" hx-swap="innerHTML">
+      Loading positions...
+    </div>
+  </div>
+{% endblock %}
