@@ -1,0 +1,213 @@
+from datetime import datetime
+from decimal import Decimal
+import random
+from functools import wraps
+
+from flask import Flask, render_template, request, redirect, url_for, session, abort
+from models import db, User, Ticker, Account, Order, Position, Trade
+
+app = Flask(__name__)
+app.config['SECRET_KEY'] = 'dev-insecure-key'  # demo only; change in real use
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///paper.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+db.init_app(app)
+
+# Create tables on first request (simple dev setup)
+@app.before_request
+def ensure_db():
+    with app.app_context():
+        db.create_all()
+
+def current_user():
+    uid = session.get('user_id')
+    if not uid:
+        return None
+    return User.query.get(uid)
+
+def login_required(fn):
+    @wraps(fn)
+    def wrapper(*args, **kwargs):
+        if not current_user():
+            return redirect(url_for('login'))
+        return fn(*args, **kwargs)
+    return wrapper
+
+# -------- Auth --------
+
+@app.route('/signup', methods=['GET', 'POST'])
+def signup():
+    if request.method == 'POST':
+        username = (request.form.get('username') or '').strip()
+        password = (request.form.get('password') or '').strip()
+        if not username or not password:
+            return render_template('login.html', error='Enter username & password', mode='signup')
+        if User.query.filter_by(username=username).first():
+            return render_template('login.html', error='Username already taken', mode='signup')
+
+        user = User(username=username)
+        user.set_password(password)  # stores salted hash
+        db.session.add(user)
+        db.session.commit()
+
+        # starting cash
+        db.session.add(Account(user_id=user.id, cash=Decimal('100000.00')))
+        db.session.commit()
+
+        session['user_id'] = user.id
+        return redirect(url_for('dashboard'))
+
+    return render_template('login.html', mode='signup')
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':  # <-- fixed
+        username = (request.form.get('username') or '').strip()
+        password = (request.form.get('password') or '').strip()
+        if not username or not password:
+            return render_template('login.html', error='Enter username & password')
+
+        user = User.query.filter_by(username=username).first()
+        if not user or not user.check_password(password):
+            return render_template('login.html', error='Invalid credentials')
+
+        session['user_id'] = user.id
+        return redirect(url_for('dashboard'))
+
+    # GET
+    return render_template('login.html', mode='login')
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    return redirect(url_for('login'))
+
+# -------- App pages / fragments --------
+
+@app.route('/')
+@login_required
+def dashboard():
+    # seed demo tickers once
+    if Ticker.query.count() == 0:
+        for sym in ['AAPL', 'MSFT', 'GOOG', 'TSLA']:
+            price = Decimal(random.randrange(80, 250))
+            db.session.add(Ticker(symbol=sym, price=price))
+        db.session.commit()
+
+    user = current_user()
+    positions = Position.query.filter_by(user_id=user.id).join(Ticker).all()
+    tickers = Ticker.query.order_by(Ticker.symbol).all()
+    return render_template('dashboard.html', tickers=tickers, positions=positions)
+
+@app.route('/prices')
+@login_required
+def prices_partial():
+    # random walk each poll
+    for t in Ticker.query.all():
+        drift = Decimal(random.randrange(-50, 51)) / Decimal('100')  # -0.50..+0.50
+        t.price = max(Decimal('1.00'), (t.price + drift).quantize(Decimal('0.01')))
+    db.session.commit()
+    tickers = Ticker.query.order_by(Ticker.symbol).all()
+    return render_template('_prices.html', tickers=tickers)
+
+@app.route('/positions')
+@login_required
+def positions_partial():
+    user = current_user()
+    positions = Position.query.filter_by(user_id=user.id).join(Ticker).all()
+    return render_template('_positions.html', positions=positions)
+
+@app.route('/order', methods=['POST'])
+@login_required
+def place_order():
+    user = current_user()
+    side = request.form.get('side')
+    order_type = request.form.get('order_type')
+    symbol = request.form.get('symbol')
+    qty_raw = request.form.get('qty')
+    limit_price_raw = request.form.get('limit_price')
+
+    # basic validation
+    try:
+      qty = int(qty_raw or 0)
+    except ValueError:
+      qty = 0
+
+    if not symbol or qty <= 0 or side not in ('BUY', 'SELL') or order_type not in ('MKT', 'LMT'):
+        abort(400)
+
+    ticker = Ticker.query.filter_by(symbol=symbol).first()
+    if not ticker:
+        abort(400)
+
+    limit_price = None
+    if order_type == 'LMT' and limit_price_raw:
+        try:
+            limit_price = Decimal(limit_price_raw)
+        except Exception:
+            abort(400)
+
+    order = Order(
+        user_id=user.id,
+        ticker_id=ticker.id,
+        side=side,
+        order_type=order_type,
+        qty=qty,
+        status='PENDING',
+        limit_price=limit_price
+    )
+    db.session.add(order)
+    db.session.commit()
+
+    # with_for_update is a no-op on SQLite (fine for demo)
+    acct = Account.query.filter_by(user_id=user.id).with_for_update().first()
+    price = ticker.price
+    should_fill = False
+    if order_type == 'MKT':
+        should_fill = True
+    elif order_type == 'LMT' and limit_price is not None:
+        if side == 'BUY' and price <= limit_price:
+            should_fill = True
+        if side == 'SELL' and price >= limit_price:
+            should_fill = True
+
+    if should_fill:
+        execute_order(order, price, acct)
+
+    # return a fresh form fragment
+    return render_template('_order_form.html')
+
+def execute_order(order: Order, price: Decimal, account: Account) -> None:
+    # record trade
+    db.session.add(Trade(order_id=order.id, price=price, qty=order.qty))
+
+    pos = Position.query.filter_by(user_id=order.user_id, ticker_id=order.ticker_id).first()
+    if not pos:
+        pos = Position(user_id=order.user_id, ticker_id=order.ticker_id, qty=0, avg_price=Decimal('0'))
+        db.session.add(pos)
+
+    if order.side == 'BUY':
+        cost = (price * order.qty).quantize(Decimal('0.01'))
+        if account.cash < cost:
+            order.status = 'CANCELLED'
+            db.session.commit()
+            return
+        new_qty = pos.qty + order.qty
+        if new_qty <= 0:
+            pos.qty = 0
+            pos.avg_price = Decimal('0.00')
+        else:
+            pos.avg_price = ((Decimal(pos.qty) * pos.avg_price) + (Decimal(order.qty) * price)) / Decimal(new_qty)
+            pos.qty = new_qty
+        account.cash = (account.cash - cost).quantize(Decimal('0.01'))
+    else:  # SELL (no shorting)
+        proceeds = (price * order.qty).quantize(Decimal('0.01'))
+        pos.qty = max(0, pos.qty - order.qty)
+        if pos.qty == 0:
+            pos.avg_price = Decimal('0.00')
+        account.cash = (account.cash + proceeds).quantize(Decimal('0.01'))
+
+    order.status = 'FILLED'
+    db.session.commit()
+
+if __name__ == '__main__':
+    app.run(debug=True)
