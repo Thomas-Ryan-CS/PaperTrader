@@ -200,11 +200,20 @@ def execute_order(order: Order, price: Decimal, account: Account) -> None:
             pos.qty = new_qty
         account.cash = (account.cash - cost).quantize(Decimal('0.01'))
     else:  # SELL (no shorting)
-        proceeds = (price * order.qty).quantize(Decimal('0.01'))
-        pos.qty = max(0, pos.qty - order.qty)
-        if pos.qty == 0:
-            pos.avg_price = Decimal('0.00')
+        sell_qty = min(pos.qty, order.qty)  # can't sell more than you hold
+        proceeds = (price * sell_qty).quantize(Decimal('0.01'))
+
+        new_qty = pos.qty - sell_qty
+        if new_qty <= 0:
+            # remove the row so it won't show up in the positions list
+            db.session.delete(pos)
+        else:
+            pos.qty = new_qty
+            # avg price unchanged when partially selling
+            # if you wanted FIFO/LIFO, you'd compute differently
+
         account.cash = (account.cash + proceeds).quantize(Decimal('0.01'))
+
 
     order.status = 'FILLED'
     db.session.commit()
