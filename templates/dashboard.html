@@ -1,6 +1,13 @@
 {% extends 'base.html' %}
 {% block title %}Dashboard · Paper Trader{% endblock %}
 {% block content %}
+
+  <!-- Top-right logout button -->
+  <div class="topbar">
+    <a class="btn-logout" href="{{ url_for('logout') }}" aria-label="Log out">Logout</a>
+  </div>
+
+  <!-- Prices + Order Form grid -->
   <div class="grid">
     <div class="card">
       <h2>Prices</h2>
@@ -44,10 +51,12 @@
     </div>
   </div>
 
+  <!-- Positions -->
   <div class="card">
     <h2>Your Positions</h2>
     <div id="positions" hx-get="{{ url_for('positions_partial') }}" hx-trigger="load, every 6s" hx-swap="innerHTML">
       Loading positions...
     </div>
   </div>
+
 {% endblock %}

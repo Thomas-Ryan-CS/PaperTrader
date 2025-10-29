@@ -3,25 +3,37 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Login (Demo)</title>
+  <title>{{ mode == 'signup' and 'Sign up' or 'Login' }} (Demo)</title>
   <style>
     body { font-family: system-ui, sans-serif; margin: 2rem; display:flex; justify-content:center; }
     .card { border: 1px solid #ddd; border-radius: 12px; padding: 1.2rem; width: min(420px, 90vw); }
     input, button { padding: .6rem; }
+    .muted { color:#555; }
   </style>
 </head>
 <body>
   <div class="card">
-    <h2>Demo Login</h2>
+    <h2>{{ mode == 'signup' and 'Create account' or 'Login' }}</h2>
+
     {% if error %}<p style="color:#b00">{{ error }}</p>{% endif %}
-    <form method="post">
+
+    <form method="post" action="{{ mode == 'signup' and url_for('signup') or url_for('login') }}">
       <label>Username</label><br>
-      <input type="text" name="username" placeholder="e.g. alice" autofocus required/>
-      <div style="margin-top:1rem">
-        <button type="submit">Enter</button>
-      </div>
+      <input type="text" name="username" placeholder="e.g. alice" autofocus required/><br><br>
+
+      <label>Password</label><br>
+      <input type="password" name="password" placeholder="••••••••" required/><br><br>
+
+      <button type="submit">{{ mode == 'signup' and 'Create account' or 'Login' }}</button>
     </form>
-    <p style="margin-top:1rem;color:#555">No password; creates/uses a local user in SQLite.</p>
+
+    <p class="muted" style="margin-top:1rem">
+      {% if mode == 'signup' %}
+        Have an account? <a href="{{ url_for('login') }}">Log in</a>
+      {% else %}
+        No account? <a href="{{ url_for('signup') }}">Sign up</a>
+      {% endif %}
+    </p>
   </div>
 </body>
 </html>
