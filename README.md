@@ -2,7 +2,7 @@
 
 Smallest-possible app for a paper trading demo using **Flask + Jinja2 + HTMX**.
 - Single codebase; server-rendered pages (no separate API/frontend).
-- Dummy username-only login stored in SQLite.
+- Dummy username-only login stored in SQLite. (to be imporoved)
 - Random-walk prices every few seconds; market & limit orders fill instantly if crossed.
 
 ## Quick start
