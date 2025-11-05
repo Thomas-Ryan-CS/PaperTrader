@@ -218,32 +218,26 @@ def execute_order(order: Order, price: Decimal, account: Account) -> None:
     order.status = 'FILLED'
     db.session.commit()
 
-# Justyn added
 @app.route('/watchlist', methods=['GET', 'POST'])
 @login_required
 def watchlist():
     user = current_user()
 
     if request.method == 'POST':
-        symbol = (request.form.get('symbol') or '').strip()
-
+        symbol = (request.form.get('symbol') or '').strip().upper()
         if symbol:
             alreadyWatched = WatchlistItem.query.filter_by(user_id=user.id, symbol=symbol).first()
-
             if not alreadyWatched:
                 newWatched = WatchlistItem(user_id=user.id, symbol=symbol)
                 db.session.add(newWatched)
                 db.session.commit()
-
         if request.headers.get('HX-Request'):
             return watchlist_partial()
 
     items = WatchlistItem.query.filter_by(user_id=user.id).all()
-
     prices = {}
     for item in items:
         ticker = Ticker.query.filter_by(symbol=item.symbol).first()
-
         if ticker:
             prices[item.symbol] = ticker.price
         else:
@@ -251,7 +245,6 @@ def watchlist():
 
     return render_template('watchlist.html', user=user, items=items, prices=prices)
 
-# Justyn added
 @app.route('/remove_watch/<symbol>')
 @login_required
 def remove_watch(symbol):

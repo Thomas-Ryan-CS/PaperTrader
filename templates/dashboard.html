@@ -52,9 +52,11 @@
   </div>
 
     <!-- Watchlist -->
-  <form hx-post="{{ url_for('watchlist') }}" hx-target="#watchlist" hx-swap="outerHTML">
-    <input type="text" name="symbol" placeholder="Enter Symbol" required>
-     <button type="submit">Add to Watchlist</button>
+  <form hx-post="{{ url_for('add_watchlist_item') }}"
+      hx-target="#watchlist"
+      hx-swap="innerHTML">
+  <input type="text" name="symbol" placeholder="Enter Symbol" required>
+  <button type="submit">Add to Watchlist</button>
   </form>
   
   <div class="card">
