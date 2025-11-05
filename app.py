@@ -115,6 +115,26 @@ def positions_partial():
     user = current_user()
     positions = Position.query.filter_by(user_id=user.id).join(Ticker).all()
     return render_template('_positions.html', positions=positions)
+#
+#Added RESET
+@app.route('/reset', methods=['POST'])
+@login_required
+def reset_portfolio():
+    user = current_user()
+
+    # Delete all positions and trades for the user
+    Position.query.filter_by(user_id=user.id).delete()
+    Trade.query.filter(Trade.order_id.in_(db.session.query(Order.id).filter_by(user_id=user.id))).delete()
+    Order.query.filter_by(user_id=user.id).delete()
+
+
+    #Reset account balance to 0
+    account = Account.query.filter_by(user_id=user.id).first()
+    if account:
+        account.cash = Decimal('0.00')
+
+    db.session.commit()
+    return redirect(url_for('dashboard'))
 
 @app.route('/order', methods=['POST'])
 @login_required
