@@ -51,6 +51,22 @@
     </div>
   </div>
 
+    <!-- Watchlist -->
+  <form hx-post="{{ url_for('watchlist') }}" hx-target="#watchlist" hx-swap="outerHTML">
+    <input type="text" name="symbol" placeholder="Enter Symbol" required>
+     <button type="submit">Add to Watchlist</button>
+  </form>
+  
+  <div class="card">
+    <h2>Your Watchlist</h2>
+    <div id="watchlist" 
+         hx-get="{{ url_for('watchlist_partial') }}" 
+         hx-trigger="load, every 6s" 
+         hx-swap="innerHTML">
+      Loading watchlist...
+    </div>
+  </div>
+
   <!-- Positions -->
   <div class="card">
     <h2>Your Positions</h2>
@@ -58,5 +74,5 @@
       Loading positions...
     </div>
   </div>
-
+ 
 {% endblock %}

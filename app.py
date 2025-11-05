@@ -3,8 +3,8 @@ from decimal import Decimal
 import random
 from functools import wraps
 
-from flask import Flask, render_template, request, redirect, url_for, session, abort
-from models import db, User, Ticker, Account, Order, Position, Trade
+from flask import Flask, render_template, request, redirect, url_for, session, abort, render_template_string
+from models import db, User, Ticker, Account, Order, Position, Trade, WatchlistItem
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'dev-insecure-key'  # demo only; change in real use
@@ -217,6 +217,90 @@ def execute_order(order: Order, price: Decimal, account: Account) -> None:
 
     order.status = 'FILLED'
     db.session.commit()
+
+# Justyn added
+@app.route('/watchlist', methods=['GET', 'POST'])
+@login_required
+def watchlist():
+    user = current_user()
+
+    if request.method == 'POST':
+        symbol = (request.form.get('symbol') or '').strip()
+
+        if symbol:
+            alreadyWatched = WatchlistItem.query.filter_by(user_id=user.id, symbol=symbol).first()
+
+            if not alreadyWatched:
+                newWatched = WatchlistItem(user_id=user.id, symbol=symbol)
+                db.session.add(newWatched)
+                db.session.commit()
+
+        if request.headers.get('HX-Request'):
+            return watchlist_partial()
+
+    items = WatchlistItem.query.filter_by(user_id=user.id).all()
+
+    prices = {}
+    for item in items:
+        ticker = Ticker.query.filter_by(symbol=item.symbol).first()
+
+        if ticker:
+            prices[item.symbol] = ticker.price
+        else:
+            prices[item.symbol] = 'N/A'
+
+    return render_template('watchlist.html', user=user, items=items, prices=prices)
+
+# Justyn added
+@app.route('/remove_watch/<symbol>')
+@login_required
+def remove_watch(symbol):
+    user = current_user()
+    item = WatchlistItem.query.filter_by(user_id=user.id, symbol=symbol).first()
+
+    if item:
+        db.session.delete(item)
+        db.session.commit()
+
+    return redirect(url_for('watchlist'))
+
+@app.route('/watchlist_partial')
+@login_required
+def watchlist_partial():
+    user = current_user()
+    watchlist_items = WatchlistItem.query.filter_by(user_id=user.id).all()
+
+    if not watchlist_items:
+        return '<p>Your watchlist is empty.</p>'
+
+    rows = []
+    for item in watchlist_items:
+        ticker = Ticker.query.filter_by(symbol=item.symbol).first()
+        price = ticker.price if ticker else 'N/A'
+        rows.append(f'<tr><td>{item.symbol}</td><td>{price}</td></tr>')
+
+    html = f"""
+    <table border="1" style="margin-top: 1em;">
+      <tr><th>Symbol</th><th>Price</th></tr>
+      {''.join(rows)}
+    </table>
+    """
+    return html
+
+@app.route('/add_watchlist_item', methods=['POST'])
+@login_required
+def add_watchlist_item():
+    user = current_user()
+    symbol = (request.form.get('symbol') or '').strip().upper()
+
+    if symbol:
+        exists = WatchlistItem.query.filter_by(user_id=user.id, symbol=symbol).first()
+        if not exists:
+            db.session.add(WatchlistItem(user_id=user.id, symbol=symbol))
+            db.session.commit()
+
+    return watchlist_partial()
+
 
 if __name__ == '__main__':
     app.run(debug=True)
