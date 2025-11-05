@@ -81,6 +81,37 @@ def logout():
     session.clear()
     return redirect(url_for('login'))
 
+# -------- Ticker sync ------------------
+def _tick_prices():
+    for t in Ticker.query.all():
+        drift = Decimal(random.randrange(-50, 51)) / Decimal('100')  # -0.50..+0.50
+        t.price = max(Decimal('1.00'), (t.price + drift).quantize(Decimal('0.01')))
+    db.session.commit()
+
+@app.route('/dash_tick')
+@login_required
+def dash_tick():
+    user = current_user()
+    # move prices exactly once per tick
+    _tick_prices()
+
+    # render both fragments and send them OOB
+    prices_html = render_template('_prices.html', 
+                                  tickers=Ticker.query.order_by(Ticker.symbol).all())
+    # reuse existing builder for watchlist content
+    watchlist_html = watchlist_partial()  # returns the <table> HTML
+
+    # wrap each with the correct target id + hx-swap-oob
+    combined = f'''
+      <div id="prices" hx-swap-oob="innerHTML">
+        {prices_html}
+      </div>
+      <div id="watchlist" hx-swap-oob="innerHTML">
+        {watchlist_html}
+      </div>
+    '''
+    return combined
+
 # -------- App pages / fragments --------
 
 @app.route('/')
@@ -265,40 +296,26 @@ def watchlist():
 
     return render_template('watchlist.html', user=user, items=items, prices=prices)
 
-@app.route('/remove_watch/<symbol>')
+@app.route('/remove_watch', methods=['POST'])
 @login_required
-def remove_watch(symbol):
-    user = current_user()
-    item = WatchlistItem.query.filter_by(user_id=user.id, symbol=symbol).first()
-
+def remove_watch():
+    symbol = (request.form.get('symbol') or '').strip().upper()
+    item = WatchlistItem.query.filter_by(user_id=current_user().id, symbol=symbol).first()
     if item:
         db.session.delete(item)
         db.session.commit()
+    return watchlist_partial()  # return only the table fragment
 
-    return redirect(url_for('watchlist'))
 
 @app.route('/watchlist_partial')
 @login_required
 def watchlist_partial():
     user = current_user()
-    watchlist_items = WatchlistItem.query.filter_by(user_id=user.id).all()
+    items = WatchlistItem.query.filter_by(user_id=user.id).all()
+    tickers = Ticker.query.all()
+    tickers_map = {t.symbol: t for t in tickers}
+    return render_template('_watchlist.html', items=items, tickers_map=tickers_map)
 
-    if not watchlist_items:
-        return '<p>Your watchlist is empty.</p>'
-
-    rows = []
-    for item in watchlist_items:
-        ticker = Ticker.query.filter_by(symbol=item.symbol).first()
-        price = ticker.price if ticker else 'N/A'
-        rows.append(f'<tr><td>{item.symbol}</td><td>{price}</td></tr>')
-
-    html = f"""
-    <table border="1" style="margin-top: 1em;">
-      <tr><th>Symbol</th><th>Price</th></tr>
-      {''.join(rows)}
-    </table>
-    """
-    return html
 
 @app.route('/add_watchlist_item', methods=['POST'])
 @login_required

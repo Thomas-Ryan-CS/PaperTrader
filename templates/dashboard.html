@@ -14,13 +14,17 @@
     </form>
   </div>
 
+  <div hx-get="{{ url_for('dash_tick') }}"
+     hx-trigger="load, every 5s"
+     hx-swap="none">
+  </div>
+
   <!-- Prices + Order Form grid -->
   <div class="grid">
     <div class="card">
       <h2>Prices</h2>
-      <div id="prices" hx-get="{{ url_for('prices_partial') }}" hx-trigger="load, every 5s" hx-swap="innerHTML">
-        Loading prices...
-      </div>
+      <!-- no polling here now -->
+      <div id="prices">Loading prices...</div>
     </div>
 
     <div class="card">
@@ -65,15 +69,10 @@
   <input type="text" name="symbol" placeholder="Enter Symbol" required>
   <button type="submit">Add to Watchlist</button>
   </form>
-  
+
   <div class="card">
     <h2>Your Watchlist</h2>
-    <div id="watchlist" 
-         hx-get="{{ url_for('watchlist_partial') }}" 
-         hx-trigger="load, every 6s" 
-         hx-swap="innerHTML">
-      Loading watchlist...
-    </div>
+    <div id="watchlist">Loading watchlist...</div>
   </div>
 
   <!-- Positions -->

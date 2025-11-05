@@ -1,0 +1,32 @@
+{# templates/_watchlist.html #}
+<table class="table table-compact">
+  <thead>
+    <tr>
+      <th>Symbol</th>
+      <th class="num">Price</th>
+      <th class="actions"></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% if items %}
+      {% for item in items %}
+        <tr>
+          <td>{{ item.symbol }}</td>
+          <td class="num">
+            {% set t = tickers_map.get(item.symbol) %}
+            {% if t %}{{ "{:,.2f}".format(t.price) }}{% else %}N/A{% endif %}
+          </td>
+          <td class="actions">
+            <a hx-post="{{ url_for('remove_watch') }}"
+                hx-vals='{"symbol":"{{ item.symbol }}"}'
+                hx-target="#watchlist"
+                hx-swap="innerHTML"
+                class="btn-link">Remove</a>
+          </td>
+        </tr>
+      {% endfor %}
+    {% else %}
+      <tr><td colspan="3">Your watchlist is empty.</td></tr>
+    {% endif %}
+  </tbody>
+</table>
