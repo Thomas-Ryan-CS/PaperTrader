@@ -159,10 +159,10 @@ def reset_portfolio():
     Order.query.filter_by(user_id=user.id).delete()
 
 
-    #Reset account balance to 0
+    #Reset account balance to 100000.0
     account = Account.query.filter_by(user_id=user.id).first()
     if account:
-        account.cash = Decimal('0.00')
+        account.cash = Decimal('100000.00')
 
     db.session.commit()
     return redirect(url_for('dashboard'))
