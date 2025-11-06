@@ -2,6 +2,7 @@ from decimal import Decimal
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash  # NEW
 
+# db accessor
 db = SQLAlchemy()
 
 class User(db.Model):
