@@ -20,6 +20,17 @@
 }
 
 /* Reset button */
+.reset-section {
+  text-align: center;
+  margin-top: 1rem;
+}
+
+.reset-desc {
+  color: #555;
+  font-size: 0.9rem;
+  margin-bottom: 0.75rem;
+}
+
 .btn-reset {
   appearance: none;
   border: 0;
@@ -32,6 +43,16 @@
   box-shadow: 0 4px 12px rgba(9, 132, 227, 0.35);
   text-decoration: none;
   transition: transform 0.04s ease, box-shadow 0.2s ease, filter 0.2s ease;
+}
+
+.btn-reset:hover {
+  filter: brightness(1.05);
+  box-shadow: 0 6px 16px rgba(9, 132, 227, 0.45);
+}
+
+.btn-reset:active {
+  transform: translateY(1px);
+  box-shadow: 0 3px 10px rgba(9, 132, 227, 0.35);
 }
 
 .btn-logout:hover {

@@ -7,18 +7,6 @@
     <a class="btn-logout" href="{{ url_for('logout') }}" aria-label="Log out">Logout</a>
   </div>
 
-    <!--Controls Reset -->
-  <div class="topbar">
-    <form action="{{ url_for('reset_portfolio') }}" method="post" style="display:inline;" onsubmit="return confirm('Are you sure you want to reset your portfolio? This will clear all positions and set your balance to 0.');">
-      <button type="submit" class="btn-reset">Reset</button>
-    </form>
-  </div>
-
-  <div hx-get="{{ url_for('dash_tick') }}"
-     hx-trigger="load, every 5s"
-     hx-swap="none">
-  </div>
-
   <!-- Prices + Order Form grid -->
   <div class="grid">
     <div class="card">
@@ -81,6 +69,17 @@
     <div id="positions" hx-get="{{ url_for('positions_partial') }}" hx-trigger="load, every 6s" hx-swap="innerHTML">
       Loading positions...
     </div>
+    <hr style="margin: 1rem 0; border: none; border-top: 1px solid #ddd;">
+
+    <div class="reset-section">
+      <p class="reset-desc">
+        To Reset your portfolio, simply press the <strong>Reset Portfolio</strong> button to 
+        set clear your positions and set your balance to <strong>$0.00</strong>.
+      </p>
+      <form action="{{ url_for('reset_portfolio') }}" method="post"
+            onsubmit="return confirm('Are you sure you want to reset your portfolio? This will remove all positions and set your balance to 0.');">
+        <button type="submit" class="btn-reset">Reset Portfolio</button>
+      </form>
+    </div>
   </div>
- 
 {% endblock %}
