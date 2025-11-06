@@ -1,0 +1,15 @@
+<table>
+  <thead><tr><th>Symbol</th><th>Qty</th><th>Avg Price</th><th>Last</th></tr></thead>
+  <tbody>
+  {% for p in positions %}
+    <tr>
+      <td>{{ p.ticker.symbol }}</td>
+      <td>{{ p.qty }}</td>
+      <td>${{ '%.2f'|format(p.avg_price) }}</td>
+      <td>${{ '%.2f'|format(p.ticker.price) }}</td>
+    </tr>
+  {% else %}
+    <tr><td colspan="4">No positions yet.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>

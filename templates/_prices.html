@@ -1,0 +1,8 @@
+<table>
+  <thead><tr><th>Symbol</th><th>Price</th></tr></thead>
+  <tbody>
+  {% for t in tickers %}
+    <tr><td>{{ t.symbol }}</td><td>${{ '%.2f'|format(t.price) }}</td></tr>
+  {% endfor %}
+  </tbody>
+</table>

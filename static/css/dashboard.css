@@ -1,0 +1,30 @@
+/* Pin logout button to top-right of the page */
+.topbar {
+  position: fixed;
+  top: 16px;
+  right: 24px;
+  z-index: 1000;
+}
+
+.btn-logout {
+  appearance: none;
+  border: 0;
+  background: linear-gradient(180deg, #ff6961, #e74c3c);
+  color: #fff;
+  padding: 0.55rem 0.9rem;
+  border-radius: 999px;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(231, 76, 60, 0.35);
+  text-decoration: none;
+  transition: transform 0.04s ease, box-shadow 0.2s ease, filter 0.2s ease;
+}
+
+.btn-logout:hover {
+  filter: brightness(1.05);
+  box-shadow: 0 6px 16px rgba(231, 76, 60, 0.45);
+}
+
+.btn-logout:active {
+  transform: translateY(1px);
+  box-shadow: 0 3px 10px rgba(231, 76, 60, 0.35);
+}

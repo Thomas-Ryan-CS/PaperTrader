@@ -1,0 +1,40 @@
+{% if query %}
+  {% if tickers %}
+    <div style="border: 1px solid #ddd; border-radius: 8px; padding: 0.5rem; background: #f9f9f9;">
+      <h3 style="margin-top: 0; font-size: 1rem; color: #555;">
+        Found {{ tickers|length }} result{{ tickers|length != 1 and 's' or '' }} for "{{ query }}"
+      </h3>
+      <table style="margin: 0;">
+        <thead>
+          <tr>
+            <th>Symbol</th>
+            <th>Company</th>
+            <th>Price</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for ticker in tickers %}
+          <tr>
+            <td><strong>{{ ticker.symbol }}</strong></td>
+            <td>{{ ticker.name or 'N/A' }}</td>
+            <td>${{ '%.2f'|format(ticker.price) }}</td>
+            <td>
+              <button 
+                type="button"
+                onclick="document.querySelector('select[name=symbol]').value='{{ ticker.symbol }}'; document.querySelector('select[name=symbol]').focus();"
+                style="padding: 0.3rem 0.8rem; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                Select
+              </button>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div style="padding: 1rem; background: #fff3cd; border: 1px solid #ffc107; border-radius: 6px; color: #856404;">
+      <strong>No results found</strong> for "{{ query }}". Try searching by symbol (e.g., AAPL) or company name (e.g., Apple).
+    </div>
+  {% endif %}
+{% endif %}

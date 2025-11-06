@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{% block title %}Paper Trader{% endblock %}</title>
+  <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 2rem; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { padding: .5rem; border-bottom: 1px solid #ddd; text-align: left; }
+    .card { border: 1px solid #ddd; border-radius: 12px; padding: 1rem; margin-bottom: 1rem; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    input, select, button { padding: .5rem; }
+    .header { display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; }
+    a { color: inherit; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1 style="margin:0">Paper Trader</h1>
+    <div>
+      {% if session.username %}
+        <span>Hi, {{ session.username }} · </span>
+        <a href="{{ url_for('logout') }}">Logout</a>
+      {% endif %}
+    </div>
+  </div>
+  {% block content %}{% endblock %}
+</body>
+</html>
