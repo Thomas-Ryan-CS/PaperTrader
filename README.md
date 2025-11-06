@@ -1,8 +1,8 @@
-# Paper Trader — Flask (all-in-one, no API)
+# Paper Trader — Flask
 
 Smallest-possible app for a paper trading demo using **Flask + Jinja2 + HTMX**.
-- Single codebase; server-rendered pages (no separate API/frontend).
-- Dummy username-only login stored in SQLite. (to be imporoved)
+- Single codebase; server-rendered pages
+- Dummy username-only login stored in SQLite
 - Random-walk prices every few seconds; market & limit orders fill instantly if crossed.
 
 ## Quick start
@@ -18,5 +18,3 @@ pip install -r requirements.txt
 python app.py
 # Open http://127.0.0.1:5000/login
 ```
-
-> Demo-only. Do NOT use in production as-is.
