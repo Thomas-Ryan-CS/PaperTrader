@@ -7,6 +7,11 @@
     <a class="btn-logout" href="{{ url_for('logout') }}" aria-label="Log out">Logout</a>
   </div>
 
+  <div hx-get="{{ url_for('dash_tick') }}"
+     hx-trigger="load, every 5s"
+     hx-swap="none">
+  </div>
+
   <!-- Prices + Order Form grid -->
   <div class="grid">
     <div class="card">
