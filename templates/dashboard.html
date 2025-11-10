@@ -2,11 +2,6 @@
 {% block title %}Dashboard · Paper Trader{% endblock %}
 {% block content %}
 
-  <!-- Top-right logout button -->
-  <div class="topbar">
-    <a class="btn-logout" href="{{ url_for('logout') }}" aria-label="Log out">Logout</a>
-  </div>
-
   <div hx-get="{{ url_for('dash_tick') }}"
      hx-trigger="load, every 5s"
      hx-swap="none">
