@@ -114,12 +114,38 @@ def dash_tick():
 
 # -------- App pages / fragments --------
 
+# @app.route('/')
+# @login_required
+# def dashboard():
+#     # seed demo tickers once
+#     if Ticker.query.count() == 0:
+#         for sym in ['AAPL', 'MSFT', 'GOOG', 'TSLA']:
+#             price = Decimal(random.randrange(80, 250))
+#             db.session.add(Ticker(symbol=sym, price=price))
+#         db.session.commit()
+
+#     user = current_user()
+#     positions = Position.query.filter_by(user_id=user.id).join(Ticker).all()
+#     tickers = Ticker.query.order_by(Ticker.symbol).all()
+#     return render_template('dashboard.html', tickers=tickers, positions=positions)
+
 @app.route('/')
 @login_required
 def dashboard():
     # seed demo tickers once
     if Ticker.query.count() == 0:
-        for sym in ['AAPL', 'MSFT', 'GOOG', 'TSLA']:
+        for sym in [  
+            ('AAPL', 'Apple Inc.'),
+            ('MSFT', 'Microsoft Corp.'),
+            ('GOOG', 'Alphabet Inc.'),
+            ('TSLA', 'Tesla Inc.'),
+            ('AMZN', 'Amazon.com Inc.'),
+            ('META', 'Meta Platforms Inc.'),
+            ('NVDA', 'NVIDIA Corp.'),
+            ('NFLX', 'Netflix Inc.'),
+            ('AMD', 'Advanced Micro Devices'),
+            ('INTC', 'Intel Corp.'),
+            ]:
             price = Decimal(random.randrange(80, 250))
             db.session.add(Ticker(symbol=sym, price=price))
         db.session.commit()
@@ -128,6 +154,21 @@ def dashboard():
     positions = Position.query.filter_by(user_id=user.id).join(Ticker).all()
     tickers = Ticker.query.order_by(Ticker.symbol).all()
     return render_template('dashboard.html', tickers=tickers, positions=positions)
+
+@app.route('/search')
+@login_required
+def search_stocks():
+    query = request.args.get('q', '').strip().upper()
+    if not query:
+        return render_template('_search_results.html', tickers=[], query='')
+    
+    # Search by symbol or name
+    tickers = Ticker.query.filter(
+        (Ticker.symbol.like(f'%{query}%')) | 
+        (Ticker.name.like(f'%{query}%'))
+    ).order_by(Ticker.symbol).all()
+    
+    return render_template('_search_results.html', tickers=tickers, query=query)
 
 @app.route('/prices')
 @login_required

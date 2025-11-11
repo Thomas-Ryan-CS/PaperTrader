@@ -1,0 +1,29 @@
+<form hx-post="{{ url_for('place_order') }}" hx-target="#order-form" hx-swap="innerHTML">
+  <label>Symbol</label><br>
+  <select name="symbol">
+    {% for t in tickers %}
+      <option value="{{ t.symbol }}">{{ t.symbol }}</option>
+    {% endfor %}
+  </select><br><br>
+
+  <label>Side</label><br>
+  <select name="side">
+    <option value="BUY">Buy</option>
+    <option value="SELL">Sell</option>
+  </select><br><br>
+
+  <label>Type</label><br>
+  <select name="order_type">
+    <option value="MKT">Market</option>
+    <option value="LMT">Limit</option>
+  </select><br><br>
+
+  <label>Qty</label><br>
+  <input type="number" name="qty" min="1" value="1" /><br><br>
+
+  <label>Limit Price (for LMT)</label><br>
+  <input type="text" name="limit_price" placeholder="e.g. 123.45" /><br><br>
+
+  <button type="submit">Submit</button>
+</form>
+<p style="color: green; margin-top: 0.5rem;">✓ Order submitted!</p>
