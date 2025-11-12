@@ -155,6 +155,18 @@ def dashboard():
     tickers = Ticker.query.order_by(Ticker.symbol).all()
     return render_template('dashboard.html', tickers=tickers, positions=positions)
 
+@app.route('/prices')
+@login_required
+def prices_partial():
+    # random walk each poll
+    for t in Ticker.query.all():
+        drift = Decimal(random.randrange(-50, 51)) / Decimal('100')  # -0.50..+0.50
+        t.price = max(Decimal('1.00'), (t.price + drift).quantize(Decimal('0.01')))
+    db.session.commit()
+    tickers = Ticker.query.order_by(Ticker.symbol).all()
+    return render_template('_prices.html', tickers=tickers)
+
+
 @app.route('/search')
 @login_required
 def search_stocks():
@@ -170,16 +182,6 @@ def search_stocks():
     
     return render_template('_search_results.html', tickers=tickers, query=query)
 
-@app.route('/prices')
-@login_required
-def prices_partial():
-    # random walk each poll
-    for t in Ticker.query.all():
-        drift = Decimal(random.randrange(-50, 51)) / Decimal('100')  # -0.50..+0.50
-        t.price = max(Decimal('1.00'), (t.price + drift).quantize(Decimal('0.01')))
-    db.session.commit()
-    tickers = Ticker.query.order_by(Ticker.symbol).all()
-    return render_template('_prices.html', tickers=tickers)
 
 @app.route('/positions')
 @login_required
