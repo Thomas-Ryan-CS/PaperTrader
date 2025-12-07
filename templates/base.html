@@ -27,9 +27,16 @@
       <a href="#">Dashboard</a>
       <a href="#">Buy / Sell</a>
       <a href="#">Portfolio</a>
-      <a href="#">News</a>
+      <a href="{{ url_for('news_page') }}">News</a>
       <a href="#">Account</a>
       <a href="{{ url_for('logout') }}">Logout</a>
+      
+       {% if user and user.account %}
+      <span class="cash-balance">
+        {% include '_cash_balance_oob.html' %}
+      </span>
+    {% endif %}
+
     </nav>
   </div>
   {% block content %}{% endblock %}

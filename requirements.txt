@@ -1,2 +1,8 @@
 Flask==3.0.3
 Flask-SQLAlchemy==3.1.1
+pytest
+selenium
+webdriver-manager
+robotframework
+robotframework-seleniumlibrary
+feedparser

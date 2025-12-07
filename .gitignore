@@ -1,3 +1,6 @@
 __pycache__/
 instance/
 .venv/
+*.xml
+log.html
+report.html

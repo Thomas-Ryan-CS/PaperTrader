@@ -27,4 +27,6 @@
 
   <button type="submit">Submit</button>
 </form>
-<p style="color: green; margin-top: 0.5rem;">✓ Order submitted!</p>
+{% if success %}
+  <p style="color: green; margin-top: 0.5rem;">✓ Order submitted!</p>
+{% endif %}

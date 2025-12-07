@@ -2,8 +2,12 @@ from datetime import datetime
 from decimal import Decimal
 import random
 from functools import wraps
+import re
+import feedparser
+import math
 
-from flask import Flask, render_template, request, redirect, url_for, session, abort, render_template_string
+
+from flask import Flask, render_template, request, redirect, url_for, session, abort, render_template_string, make_response
 from models import db, User, Ticker, Account, Order, Position, Trade, WatchlistItem
 
 app = Flask(__name__)
@@ -268,7 +272,12 @@ def place_order():
         execute_order(order, price, acct)
 
     # return a fresh form fragment
-    return render_template('_order_form.html')
+    #return render_template('_order_form.html', tickers=Ticker.query.order_by(Ticker.symbol).all(), success=True)
+    order_form_html = render_template('_order_form.html',
+                                  tickers=Ticker.query.order_by(Ticker.symbol).all(),
+                                  success=True)
+    cash_html = render_template('_cash_balance_oob.html', user=user)
+    return order_form_html + cash_html
 
 def execute_order(order: Order, price: Decimal, account: Account) -> None:
     # record trade
@@ -373,6 +382,77 @@ def add_watchlist_item():
             db.session.commit()
 
     return watchlist_partial()
+
+# news section, maybe refactor if we have time
+# ----------------- Financial News -----------------
+
+NEWS_FEEDS = [
+    {
+        "source": "MarketWatch",
+        "url": "https://feeds.marketwatch.com/marketwatch/topstories/"
+    }
+]
+
+
+def _strip_html(text: str) -> str:
+    if not text:
+        return ""
+    return re.sub(r"<.*?>", "", text)
+
+
+def fetch_financial_news(per_feed_limit: int = 40):
+    """Fetch and normalize financial news from multiple RSS feeds."""
+    articles = []
+
+    for feed in NEWS_FEEDS:
+        parsed = feedparser.parse(feed["url"])
+        for entry in parsed.entries[:per_feed_limit]:
+            summary_raw = entry.get("summary") or entry.get("description") or ""
+            summary_clean = _strip_html(summary_raw).strip()
+            if len(summary_clean) > 260:
+                summary_clean = summary_clean[:257] + "..."
+
+            articles.append(
+                {
+                    "source": feed["source"],
+                    "title": (entry.get("title") or "").strip(),
+                    "summary": summary_clean,
+                    "link": entry.get("link"),
+                    "published": entry.get("published", ""),
+                }
+            )
+
+    # NO slicing here – we return every article we got
+    return articles
+
+@app.route("/news")
+@login_required
+def news_page():
+    user = current_user()
+    return render_template("news.html", user=user)
+
+
+@app.route("/news/tiles")
+@login_required
+def news_tiles():
+    """Return ALL news articles on one page (no pagination)."""
+    articles = fetch_financial_news(per_feed_limit=40)
+    fetched_at = datetime.utcnow().strftime("%H:%M:%S UTC")
+
+    html = render_template(
+        "_news_tiles.html",
+        articles=articles,
+        fetched_at=fetched_at,
+    )
+
+    resp = make_response(html)
+    resp.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+    resp.headers["Pragma"] = "no-cache"
+    return resp
+
+@app.context_processor
+def inject_user():
+    return {"user": current_user()}
 
 
 if __name__ == '__main__':

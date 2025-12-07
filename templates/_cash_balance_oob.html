@@ -1,0 +1,5 @@
+{% if user and user.account %}
+  <span id="cash-balance" hx-swap-oob="true">
+    Balance: ${{ "%.2f"|format(user.account.cash) }}
+  </span>
+{% endif %}
