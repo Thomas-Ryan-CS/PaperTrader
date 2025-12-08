@@ -1,0 +1,39 @@
+{% if fetched_at %}
+  <div style="grid-column: 1 / -1; font-size: 0.8rem; color: #666; margin-bottom: 0.5rem;">
+    Updated: {{ fetched_at }} — Showing {{ articles|length }} article{{ 's' if articles|length != 1 else '' }}
+  </div>
+{% endif %}
+
+{% for article in articles %}
+  <article class="news-card">
+    <div>
+      <!-- Outlet name at the top in bold -->
+      <div class="news-source"><strong>{{ article.source }}</strong></div>
+
+      {% if article.title %}
+        <h3 class="news-title">{{ article.title }}</h3>
+      {% endif %}
+
+      {% if article.summary %}
+        <p class="news-summary">
+          {{ article.summary }}
+        </p>
+      {% endif %}
+    </div>
+
+    <div class="news-meta">
+      {% if article.published %}
+        <div>{{ article.published }}</div>
+      {% endif %}
+      {% if article.link %}
+        <div>
+          <a href="{{ article.link }}" target="_blank" rel="noopener noreferrer">
+            Read full article →
+          </a>
+        </div>
+      {% endif %}
+    </div>
+  </article>
+{% else %}
+  <p>No news available right now.</p>
+{% endfor %}

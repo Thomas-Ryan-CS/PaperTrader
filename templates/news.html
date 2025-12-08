@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+{% block title %}News Page{% endblock %}
+{% block content %}
+
+<h2 class="mb-3">Market News</h2>
+
+<div class="mb-2">
+  <button
+    class="btn btn-sm btn-secondary"
+    hx-get="{{ url_for('news_tiles') }}"
+    hx-target="#news-grid"
+    hx-swap="innerHTML"
+  >
+    Refresh News
+  </button>
+</div>
+
+<div
+  id="news-grid"
+  hx-get="{{ url_for('news_tiles') }}"
+  hx-trigger="load"
+  hx-target="#news-grid"
+  hx-swap="innerHTML"
+>
+  <p>Loading latest financial news…</p>
+</div>
+
+<style>
+  #news-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1rem;
+    align-items: stretch;
+  }
+
+  .news-card {
+    border-radius: 8px;
+    padding: 0.85rem 1rem;
+    border: 1px solid #ddd;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  .news-source {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 0.35rem;
+    color: #555;
+  }
+
+  .news-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin: 0 0 0.4rem 0;
+  }
+
+  .news-summary {
+    font-size: 0.85rem;
+    color: #444;
+    margin-bottom: 0.6rem;
+  }
+
+  .news-meta {
+    font-size: 0.75rem;
+    color: #777;
+  }
+
+  .news-meta a {
+    text-decoration: none;
+  }
+
+  .news-meta a:hover {
+    text-decoration: underline;
+  }
+</style>
+
+{% endblock %}
