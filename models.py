@@ -1,6 +1,7 @@
 from decimal import Decimal
+from datetime import date
 from flask_sqlalchemy import SQLAlchemy
-from werkzeug.security import generate_password_hash, check_password_hash  # NEW
+from werkzeug.security import generate_password_hash, check_password_hash
 
 # db accessor
 db = SQLAlchemy()
@@ -65,4 +66,20 @@ class WatchlistItem(db.Model):
     symbol = db.Column(db.String(64), nullable=False)
     user = db.relationship('User')
     last_notified_price = db.Column(db.Float, nullable=True)
+
+class ScheduledTransaction(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    # DEPOSIT or WITHDRAW
+    tx_type = db.Column(db.String(16), nullable=False)
+    # Cash amount
+    amount = db.Column(db.Numeric(14, 2), nullable=False)
+    # Date when this should be applied (no time-of-day granularity needed here)
+    scheduled_date = db.Column(db.Date, nullable=False)
+    # Status: PENDING, PROCESSED, CANCELED
+    status = db.Column(db.String(16), nullable=False, default="PENDING")
+    created_at = db.Column(db.Date, nullable=False, default=date.today)
+    processed_at = db.Column(db.Date, nullable=True)
+
+    user = db.relationship("User")
     
