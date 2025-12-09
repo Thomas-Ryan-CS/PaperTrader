@@ -514,6 +514,23 @@ def price_alerts():
     # alerts is a list: one entry per stock that moved
     return render_template("_price_alerts_oob.html", alerts=alerts)
 
+@app.route("/watchlist/name", methods=["POST"])
+@login_required
+def update_watchlist_name():
+    user = current_user()
+    new_name = (request.form.get("name") or "").strip()
+
+    if not new_name:
+        new_name = "My Watchlist"
+
+    # optional: enforce max length
+    new_name = new_name[:64]
+
+    user.watchlist_name = new_name
+    db.session.commit()
+
+    # If you use HTMX, we can return just the header fragment:
+    return render_template("_watchlist_header.html", user=user)
 
 if __name__ == '__main__':
     app.run(debug=True)
