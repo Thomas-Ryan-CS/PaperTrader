@@ -111,4 +111,20 @@
       </form>
     </div>
   </div>
+
+<div class="card">
+  <h2>Historical Performance</h2>
+
+  <div
+    id="performance-chart-wrapper"
+    hx-get="{{ url_for('performance_chart_png') }}"
+    hx-trigger="load"
+    hx-target="#performance-chart-wrapper"
+    hx-swap="innerHTML"
+  >
+    <p>Loading performance chart…</p>
+  </div>
+</div>
+
+
 {% endblock %}
