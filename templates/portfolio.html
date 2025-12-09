@@ -6,16 +6,26 @@
 
   {% include "_positions.html" %}
 </div>
-
+<div class="card">
 <h3>Transaction History</h3>
 <div id="transactions-table"
      hx-get="/transactions"
-     hx-trigger="every 5s"
+     hx-trigger="load, every 5s"
      hx-swap="innerHTML">
     Loading transactions...
 </div>
-
 </div>
+<div class="card">
+<h3>Open Orders</h3>
+
+<div id="open-orders"
+     hx-get="/open_orders"
+     hx-trigger="load, every 2s"
+     hx-swap="innerHTML">
+    Loading orders...
+</div>
+</div>
+
 
 <div class="card">
   <h2>Historical Performance</h2>
