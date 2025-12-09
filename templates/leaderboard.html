@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Leaderboard · Paper Trader{% endblock %}
+
+{% block content %}
+  <div class="card">
+    <h2>Leaderboard (Total PnL)</h2>
+
+    {% if leaderboard %}
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Rank</th>
+            <th>User</th>
+            <th>Total PnL</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in leaderboard %}
+            <tr {% if row.is_current %}style="font-weight: bold;"{% endif %}>
+              <td>#{{ row.rank }}</td>
+              <td>{{ row.username }}</td>
+              <td>
+                {% if row.pnl >= 0 %}
+                  +${{ "%.2f"|format(row.pnl) }}
+                {% else %}
+                  -${{ "%.2f"|format(row.pnl|abs) }}
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p>No users / PnL data yet.</p>
+    {% endif %}
+  </div>
+{% endblock %}
