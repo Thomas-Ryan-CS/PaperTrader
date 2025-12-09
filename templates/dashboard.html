@@ -2,6 +2,8 @@
 {% block title %}Dashboard · Paper Trader{% endblock %}
 {% block content %}
 
+ 
+
   <div
     hx-get="{{ url_for('price_alerts') }}"
     hx-trigger="load, every 5s"
@@ -12,6 +14,119 @@
      hx-trigger="load, every 5s"
      hx-swap="none">
   </div>
+
+  <style>
+  body {
+    font-family: system-ui, sans-serif;
+    margin: 0;
+    background: linear-gradient(90deg, #f0f4ff, #306e8b);
+    color: #333;
+  }
+
+  h2 {
+    margin-bottom: 1rem;
+    color: #222;
+    font-weight: 600;
+  }
+
+  /* Card styling */
+  .card {
+    background: linear-gradient(180deg, #f0f4ff, #d7f2ff);
+    border: 1px solid #000000;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  }
+
+  /* Grid layout for Prices + Order Form */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  /* Inputs */
+  input, select {
+    width: 100%;
+    padding: .75rem;
+    margin-top: .4rem;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  input:focus, select:focus {
+    border-color: #0077ff;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(0,119,255,0.1);
+  }
+
+  .search-input,
+.symbol-input {
+  width: 100%;
+  max-width: 320px;   /* keeps them from being too long */
+  margin: 0 auto 1rem auto; /* centers inside card and adds spacing */
+  display: block;
+}
+
+/* Make buttons align with inputs */
+.search-btn,
+.symbol-btn {
+  display: block;
+  margin: 0.5rem auto;
+  max-width: 320px;
+  width: 100%;
+}
+
+
+  /* Buttons */
+  button {
+    padding: .75rem 0.5rem;
+    background: #238aff;
+    color: #fff;
+    border: 1px solid black;
+    border-radius: 8px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 0.3s;
+  }
+  button:hover {
+    background: #005fcc;
+  }
+
+  /* Reset button variant */
+  .btn-reset {
+    background: #dc2522;
+  }
+  .btn-reset:hover {
+    background: #c62828;
+  }
+
+  /* Reset section */
+  .reset-section {
+    background: #fdf2f2;
+    border: 1px solid #f5c2c2;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-top: 1rem;
+  }
+  .reset-desc {
+    margin-bottom: 1rem;
+    color: #bd5f5f;
+  }
+
+  /* Search results spacing */
+  #search-results {
+    margin-top: 1rem;
+  }
+
+  /* Watchlist header spacing */
+  #watchlist-header {
+    margin-bottom: 1rem;
+  }
+</style>
 
   <!-- Search Stocks Card -->
   <div class="card">
@@ -26,7 +141,7 @@
         name="q" 
         placeholder="Search by symbol or company name (e.g., AAPL or Apple)"
         autocomplete="off"
-        style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem;">
+        style="width: 97%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem;">
     </form>
     <div id="search-results" style="margin-top: 1rem;"></div>
   </div>
@@ -79,7 +194,7 @@
   <form hx-post="{{ url_for('add_watchlist_item') }}"
       hx-target="#watchlist"
       hx-swap="innerHTML">
-  <input type="text" name="symbol" placeholder="Enter Symbol" required>
+  <input type="text" name="symbol" placeholder="Enter Symbol" style="width:97%; border:1px solid black;" required>
   <button type="submit">Add to Watchlist</button>
   </form>
 

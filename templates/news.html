@@ -26,6 +26,44 @@
 </div>
 
 <style>
+
+  body {
+    font-family: system-ui, sans-serif;
+    margin: 0;
+    background: linear-gradient(90deg, #f0f4ff, #306e8b);
+    color: #000000;
+  }
+
+  .page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding: 0 0.5rem;
+  }
+
+  h2 {
+    margin: 0;
+    font-weight: 600;
+    color: #222;
+  }
+
+  /* Refresh button */
+  .btn {
+    padding: 0.5rem 1rem;
+    background: #0077ff;
+    color: #fff;
+    border: 1.5px solid black;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background 0.3s;
+  }
+  .btn:hover {
+    background: #238aff;
+  }
+
+
   #news-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
@@ -36,8 +74,8 @@
   .news-card {
     border-radius: 8px;
     padding: 0.85rem 1rem;
-    border: 1px solid #ddd;
-    background: #fff;
+    border: 1px solid #000000;
+    background: linear-gradient(180deg, #f0f4ff, #d7f2ff);
     display: flex;
     flex-direction: column;
     justify-content: space-between;
