@@ -1,0 +1,32 @@
+{% if alerts %}
+  <div id="price-alerts-container" hx-swap-oob="beforeend">
+    {% for a in alerts %}
+      <div class="price-alert">
+        <strong>{{ a.symbol }}</strong>
+        {% if a.direction %}
+          moved {{ a.direction }} to
+        {% else %}
+          is now
+        {% endif %}
+        ${{ "%.2f"|format(a.price) }}
+      </div>
+      <script>
+        (function() {
+          // This script is paired with the alert div immediately before it
+          const el = document.currentScript.previousElementSibling;
+          if (!el) return;
+
+          // Keep it visible for 7 seconds, then fade/remove
+          setTimeout(() => {
+            el.classList.add("fade-out");
+            setTimeout(() => {
+              if (el.parentElement) {
+                el.parentElement.removeChild(el);
+              }
+            }, 1500); // match CSS transition duration
+          }, 7000);
+        })();
+      </script>
+    {% endfor %}
+  </div>
+{% endif %}
