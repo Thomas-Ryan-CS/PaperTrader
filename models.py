@@ -58,10 +58,10 @@ class Trade(db.Model):
     qty = db.Column(db.Integer, nullable=False)
     order = db.relationship('Order')
 
-# Justyn added
 class WatchlistItem(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     symbol = db.Column(db.String(64), nullable=False)
     user = db.relationship('User')
+    last_notified_price = db.Column(db.Float, nullable=True)
     

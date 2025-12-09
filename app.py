@@ -474,6 +474,50 @@ def news_tiles():
 def inject_user():
     return {"user": current_user()}
 
+@app.route("/price-alerts")
+@login_required
+def price_alerts():
+    user = current_user()
+
+    PRICE_DELTA = 0.01  # minimum change to trigger alert (e.g. $0.01)
+
+    alerts = []
+    items = WatchlistItem.query.filter_by(user_id=user.id).all()
+
+    for item in items:
+        # WatchlistItem stores symbol, not ticker_id
+        ticker = Ticker.query.filter_by(symbol=item.symbol).first()
+        if not ticker:
+            continue
+
+        current_price = float(ticker.price)
+        last_notified = item.last_notified_price
+
+        # First time OR significant change
+        if last_notified is None or abs(current_price - last_notified) >= PRICE_DELTA:
+            direction = None
+            if last_notified is not None:
+                direction = "up" if current_price > last_notified else "down"
+
+            alerts.append({
+                "symbol": ticker.symbol,
+                "price": current_price,
+                "direction": direction,
+            })
+
+            # Update so we don't alert again for the same price
+            item.last_notified_price = current_price
+
+    # If we found any changes, commit them
+    if alerts:
+        db.session.commit()
+        # show only ONE alert at a time: pick the first
+        alert = alerts[0]
+    else:
+        alert = None
+
+    return render_template("_price_alerts_oob.html", alert=alert)
+
 
 if __name__ == '__main__':
     app.run(debug=True)
