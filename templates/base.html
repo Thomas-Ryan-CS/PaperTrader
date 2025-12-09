@@ -52,9 +52,74 @@
       opacity: 0;
     }
 
+    #flash-toast-container {
+      position: fixed;
+      top: 20px;
+      left: 20px;     /* ← Move to the LEFT side */
+      z-index: 2000;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .flash-toast {
+      background: #e9ffe9;
+      border: 1px solid #88cc88;
+      color: #225522;
+      padding: 0.7rem 1rem;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+      opacity: 1;
+      transition: opacity 1.5s ease; /* fade out */
+    }
+
+    .flash-error {
+      background: #ffe9e9;
+      border-color: #cc8888;
+      color: #552222;
+    }
+
+    .flash-success {
+      background: #e9ffe9;
+      border-color: #88cc88;
+      color: #225522;
+    }
+
+    .flash-info {
+      background: #e9f3ff;
+      border-color: #88aacc;
+      color: #223355;
+    }
+
+    .flash-toast.fade-out {
+      opacity: 0;
+    }
+
   </style>
 </head>
 <body>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div id="flash-toast-container">
+        {% for category, msg in messages %}
+          <div class="flash-toast flash-{{ category }}">
+            {{ msg }}
+          </div>
+        {% endfor %}
+      </div>
+
+      <script>
+        // Auto-fade + remove
+        setTimeout(() => {
+          document.querySelectorAll(".flash-toast").forEach(el => {
+            el.classList.add("fade-out");
+            setTimeout(() => el.remove(), 1500);
+          });
+        }, 4000);  // stays visible 4 seconds
+      </script>
+    {% endif %}
+  {% endwith %}
   <div id="price-alerts-container"></div>
   <div class="header">
     <h1 style="margin:0">Paper Trader</h1>
@@ -63,14 +128,13 @@
       <a href="#">Buy / Sell</a>
       <a href="{{ url_for('portfolio') }}">Portfolio</a>
       <a href="{{ url_for('news_page') }}">News</a>
-      <a href="#">Account</a>
+      <a href="{{ url_for('account_page') }}">Account</a>
       <a href="{{ url_for('logout') }}">Logout</a>
-      
-       {% if user and user.account %}
-      <span class="cash-balance">
-        {% include '_cash_balance_oob.html' %}
-      </span>
-    {% endif %}
+      {% if user and user.account %}
+        <span id="cash-balance" class="cash-balance">
+          ${{ "%.2f"|format(user.account.cash) }}
+        </span>
+      {% endif %}
 
     </nav>
   </div>

@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}Account · Paper Trader{% endblock %}
+
+{% block content %}
+
+<h2>Account</h2>
+
+<div class="card">
+  <h3>Current Balance</h3>
+  <p><strong>${{ "%.2f"|format(account.cash) }}</strong></p>
+</div>
+
+<div class="card">
+  <h3>Schedule a Transaction</h3>
+
+  <!-- BASIC HTML FORM -->
+  <form action="{{ url_for('schedule_transaction') }}" method="post">
+
+    <label>Type</label><br>
+    <select name="tx_type" required>
+      <option value="DEPOSIT">Deposit</option>
+      <option value="WITHDRAW">Withdraw</option>
+    </select><br><br>
+
+    <label>Amount ($)</label><br>
+    <input type="number" name="amount" step="0.01" min="0.01" required><br><br>
+
+    <label>Date</label><br>
+    <input type="date" name="scheduled_date" required><br><br>
+
+    <button type="submit">Schedule</button>
+  </form>
+</div>
+
+<div class="card">
+  <h3>Upcoming Scheduled Transactions</h3>
+
+  {% if upcoming %}
+    <table>
+      <tr><th>Type</th><th>Amount</th><th>Date</th></tr>
+      {% for tx in upcoming %}
+        <tr>
+          <td>{{ tx.tx_type }}</td>
+          <td>${{ "%.2f"|format(tx.amount) }}</td>
+          <td>{{ tx.scheduled_date }}</td>
+        </tr>
+      {% endfor %}
+    </table>
+  {% else %}
+    <p>No upcoming transactions.</p>
+  {% endif %}
+</div>
+
+<div class="card">
+  <h3>Recently Processed</h3>
+
+  {% if processed %}
+    <table>
+      <tr><th>Type</th><th>Amount</th><th>Date Processed</th></tr>
+      {% for tx in processed %}
+        <tr>
+          <td>{{ tx.tx_type }}</td>
+          <td>${{ "%.2f"|format(tx.amount) }}</td>
+          <td>{{ tx.processed_at }}</td>
+        </tr>
+      {% endfor %}
+    </table>
+  {% else %}
+    <p>No processed transactions yet.</p>
+  {% endif %}
+</div>
+
+{% endblock %}
