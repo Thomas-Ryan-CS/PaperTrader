@@ -214,6 +214,18 @@ def reset_portfolio():
     db.session.commit()
     return redirect(url_for('dashboard'))
 
+@app.route('/portfolio', methods=['GET', 'POST'])
+@login_required
+def portfolio():
+    user = current_user()
+    positions = (
+        Position.query
+        .filter_by(user_id=user.id)
+        .join(Ticker)
+        .all()
+    )
+    return render_template('portfolio.html', positions=positions)
+
 @app.route('/order', methods=['POST'])
 @login_required
 def place_order():
@@ -320,6 +332,14 @@ def execute_order(order: Order, price: Decimal, account: Account) -> None:
 
     order.status = 'FILLED'
     db.session.commit()
+
+@app.route('/transactions', methods=['GET', 'POST'])
+@login_required
+def transactions_partial():
+    user = current_user()
+    trades = Trade.query.join(Order).filter(Order.user_id == user.id).order_by(Trade.id.desc()).all()
+    return render_template('_transactions.html', trades=trades)
+
 
 @app.route('/watchlist', methods=['GET', 'POST'])
 @login_required
@@ -457,3 +477,4 @@ def inject_user():
 
 if __name__ == '__main__':
     app.run(debug=True)
+
