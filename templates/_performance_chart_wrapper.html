@@ -1,0 +1,11 @@
+<div id="performance-chart-wrapper">
+  {% if img_b64 %}
+    <img
+      src="data:image/png;base64,{{ img_b64 }}"
+      alt="Portfolio Performance"
+      style="max-width: 100%; border: 1px solid #ddd; border-radius: 4px;"
+    />
+  {% else %}
+    <p>Performance graph will appear after your first trade.</p>
+  {% endif %}
+</div>

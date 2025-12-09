@@ -1,3 +1,4 @@
+import base64
 from datetime import datetime
 from decimal import Decimal
 import random
@@ -5,9 +6,13 @@ from functools import wraps
 import re
 import feedparser
 import math
+import io
+import matplotlib
+matplotlib.use("Agg")  # non-GUI backend
+import matplotlib.pyplot as plt
 
 
-from flask import Flask, render_template, request, redirect, url_for, session, abort, render_template_string, make_response
+from flask import Flask, render_template, request, redirect, url_for, session, abort, render_template_string, make_response, send_file
 from models import db, User, Ticker, Account, Order, Position, Trade, WatchlistItem
 
 app = Flask(__name__)
@@ -531,6 +536,83 @@ def update_watchlist_name():
 
     # If you use HTMX, we can return just the header fragment:
     return render_template("_watchlist_header.html", user=user)
+
+def render_performance_chart_html(user):
+    # Get all trades for this user in chronological order
+    trades = (
+        Trade.query
+        .join(Order, Trade.order_id == Order.id)
+        .filter(Order.user_id == user.id)
+        .order_by(Trade.id)
+        .all()
+    )
+
+    img_b64 = None
+
+    if trades:
+        START_EQUITY = float(Decimal("100000.00"))
+        cash = START_EQUITY
+        positions = {}  # ticker_id -> {"qty": int, "last_price": float}
+
+        xs = []
+        ys = []
+
+        for idx, trade in enumerate(trades, start=1):
+            order = trade.order
+            ticker_id = order.ticker_id
+            side = order.side  # "BUY" or "SELL"
+            price = float(trade.price)
+            qty = trade.qty
+
+            if ticker_id not in positions:
+                positions[ticker_id] = {"qty": 0, "last_price": price}
+
+            if side == "BUY":
+                cash -= price * qty
+                positions[ticker_id]["qty"] += qty
+            elif side == "SELL":
+                cash += price * qty
+                positions[ticker_id]["qty"] -= qty
+
+            positions[ticker_id]["last_price"] = price
+
+            equity = cash + sum(
+                pos["qty"] * pos["last_price"] for pos in positions.values()
+            )
+            pnl = equity - START_EQUITY
+
+            xs.append(idx)   # t = 1, 2, ...
+            ys.append(pnl)
+
+        # Build matplotlib figure into PNG in memory
+        fig, ax = plt.subplots(figsize=(6, 3))
+        ax.plot(xs, ys, marker="o", linewidth=1.5)
+        ax.axhline(0, linewidth=0.8)
+        ax.set_title("Portfolio PnL vs Trades")
+        ax.set_xlabel("Trade # (t)")
+        ax.set_ylabel("PnL ($)")
+        fig.tight_layout()
+
+        buf = io.BytesIO()
+        fig.savefig(buf, format="png")
+        plt.close(fig)
+        buf.seek(0)
+
+        img_b64 = base64.b64encode(buf.read()).decode("ascii")
+
+    # Render HTML fragment (this is the template render you were expecting)
+    return render_template("_performance_chart_wrapper.html", img_b64=img_b64)
+
+
+@app.route("/performance_chart.png")
+@login_required
+def performance_chart_png():
+    user = current_user()
+    # This returns HTML, not raw PNG – by design
+    return render_performance_chart_html(user)
+
+
+
 
 if __name__ == '__main__':
     app.run(debug=True)
