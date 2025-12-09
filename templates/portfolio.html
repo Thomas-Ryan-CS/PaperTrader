@@ -31,6 +31,56 @@
   </div>
 </div>
 
+<style>
+  body {
+    font-family: system-ui, sans-serif;
+    margin: 0;
+    background: linear-gradient(90deg, #f0f4ff, #306e8b);
+    color: #333;
+  }
+
+  h2 {
+    margin-bottom: 1rem;
+    font-weight: 600;
+    color: #222;
+  }
+
+  /* Card styling */
+  .card {
+    background: linear-gradient(180deg, #f0f4ff, #d7f2ff);
+    border: 1.5px solid #000000;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  }
+
+  /* Transactions table */
+  #transactions-table {
+    margin-top: 2rem;
+    font-size: 1.2rem;
+  }
+  #transactions-table table {
+    border-collapse: collapse;
+    width: 100%;
+  }
+  #transactions-table th,
+  #transactions-table td {
+    padding: 0.6rem;
+    border-bottom: 1px solid #ddd;
+    text-align: left;
+  }
+  #transactions-table th {
+    background: #f0f4f8;
+    font-weight: 600;
+  }
+
+  /* Performance chart wrapper */
+  #performance-chart-wrapper {
+    text-align: center;
+    padding: 1rem;
+  }
+</style>
 
 
 {% endblock %}
