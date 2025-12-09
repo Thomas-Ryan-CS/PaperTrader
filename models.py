@@ -8,7 +8,8 @@ db = SQLAlchemy()
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(64), unique=True, nullable=False)
-    password_hash = db.Column(db.String(255), nullable=False)  # NEW
+    password_hash = db.Column(db.String(255), nullable=False)
+    watchlist_name = db.Column(db.String(64), nullable=True)
 
     # helpers
     def set_password(self, password: str) -> None:
