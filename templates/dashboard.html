@@ -2,6 +2,12 @@
 {% block title %}Dashboard · Paper Trader{% endblock %}
 {% block content %}
 
+  <div
+    hx-get="{{ url_for('price_alerts') }}"
+    hx-trigger="load, every 5s"
+    hx-swap="none">
+  </div>
+
   <div hx-get="{{ url_for('dash_tick') }}"
      hx-trigger="load, every 5s"
      hx-swap="none">

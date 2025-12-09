@@ -1,0 +1,27 @@
+{% if alert %}
+  <div id="price-alerts-container" hx-swap-oob="innerHTML">
+    <div class="price-alert" id="price-alert">
+      <strong>{{ alert.symbol }}</strong>
+      {% if alert.direction %}
+        moved {{ alert.direction }} to
+      {% else %}
+        is now
+      {% endif %}
+      ${{ "%.2f"|format(alert.price) }}
+    </div>
+
+    <script>
+      // After 5 seconds, fade out and remove this alert
+      setTimeout(() => {
+        const el = document.getElementById("price-alert");
+        if (!el) return;
+        el.classList.add("fade-out");
+        setTimeout(() => {
+          if (el.parentElement) {
+            el.parentElement.removeChild(el);
+          }
+        }, 800); // match CSS transition duration
+      }, 5000);
+    </script>
+  </div>
+{% endif %}
