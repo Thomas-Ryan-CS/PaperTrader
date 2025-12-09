@@ -1,0 +1,26 @@
+<!-- _transactions.html -->
+<table class="table table-bordered table-sm">
+  <thead>
+    <tr>
+      <th>Side</th>
+      <th>Symbol</th>
+      <th>Qty</th>
+      <th>Price</th>
+    </tr>
+  </thead>
+
+  <tbody>
+    {% if trades %}
+      {% for t in trades %}
+        <tr>
+          <td>{{ t.order.side if t.order else 'N/A' }}</td>
+          <td>{{ t.order.ticker.symbol if t.order and t.order.ticker else 'N/A' }}</td>
+          <td>{{ t.qty }}</td>
+          <td>${{ '%.2f'|format(t.price) }}</td>
+        </tr>
+      {% endfor %}
+    {% else %}
+      <tr><td colspan="4">No trades yet.</td></tr>
+    {% endif %}
+  </tbody>
+</table>

@@ -24,9 +24,9 @@
   <div class="header">
     <h1 style="margin:0">Paper Trader</h1>
     <nav class="nav-bar">
-      <a href="#">Dashboard</a>
+      <a href="{{ url_for('dashboard') }}">Dashboard</a>
       <a href="#">Buy / Sell</a>
-      <a href="#">Portfolio</a>
+      <a href="{{ url_for('portfolio') }}">Portfolio</a>
       <a href="{{ url_for('news_page') }}">News</a>
       <a href="#">Account</a>
       <a href="{{ url_for('logout') }}">Logout</a>

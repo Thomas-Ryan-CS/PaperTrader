@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block title %}Portfolio{% endblock %}
+{% block content %}
+<div class="card">
+  <h2>Your Positions</h2>
+
+  {% include "_positions.html" %}
+</div>
+
+<h3>Transaction History</h3>
+<div id="transactions-table"
+     hx-get="/transactions"
+     hx-trigger="every 5s"
+     hx-swap="innerHTML">
+    Loading transactions...
+</div>
+
+</div>
+
+{% endblock %}
