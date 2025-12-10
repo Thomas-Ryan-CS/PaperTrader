@@ -14,7 +14,7 @@
   <h3>Schedule a Transaction</h3>
 
   <!-- BASIC HTML FORM -->
-  <form action="{{ url_for('schedule_transaction') }}" method="post">
+  <form action="{{ url_for('schedule_transaction') }}" method="post" class="transaction">
 
     <label>Type</label><br>
     <select name="tx_type" required>
@@ -28,7 +28,7 @@
     <label>Date</label><br>
     <input type="date" name="scheduled_date" required><br><br>
 
-    <button type="submit">Schedule</button>
+    <button type="submit" class="button">Schedule</button>
   </form>
 </div>
 
@@ -36,7 +36,7 @@
   <h3>Upcoming Scheduled Transactions</h3>
 
   {% if upcoming %}
-    <table>
+    <table class="styled-table">
       <tr><th>Type</th><th>Amount</th><th>Date</th></tr>
       {% for tx in upcoming %}
         <tr>
@@ -69,5 +69,76 @@
     <p>No processed transactions yet.</p>
   {% endif %}
 </div>
+
+
+<style>
+  body {
+    font-family: system-ui, sans-serif;
+    margin: 0;
+    background: linear-gradient(90deg, #f0f4ff, #306e8b);
+    color: #333;
+  }
+
+  h2 {
+    margin-bottom: 1rem;
+    font-weight: 600;
+    color: #222;
+  }
+
+  h3 {
+    margin-bottom: 0.75rem;
+    font-weight: 500;
+    color: #444;
+  }
+
+  .card {
+    background: linear-gradient(180deg, #f0f4ff, #d7f2ff);
+    border: 1px solid #eee;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  }
+
+  .balance {
+    font-size: 1.25rem;
+    color: #0077ff;
+  }
+
+  .transaction select,
+  .transaction input {
+    width: 100%;
+    max-width: 320px;
+    padding: 0.6rem;
+    margin-top: 0.4rem;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 1rem;
+    display: block;
+  }
+
+  .transaction input:focus,
+  .transaction select:focus {
+    border-color: #0077ff;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(0,119,255,0.1);
+  }
+
+  .button {
+    padding: 0.6rem 1rem;
+    background: #0077ff;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 0.3s;
+    margin-top: 0.5rem;
+  }
+  .button:hover {
+    background: #005fcc;
+  }
+
+</style>
 
 {% endblock %}
