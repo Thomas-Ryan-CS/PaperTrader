@@ -723,7 +723,57 @@ def schedule_transaction():
 
 @app.before_request
 def apply_scheduled_for_logged_in_user():
+    user = current_user()
+    if user is None:
+        return  # no one logged in, nothing to do
     process_due_scheduled_transactions(current_user().id)
+
+
+START_EQUITY = Decimal("100000.00")
+
+def compute_user_pnl(user: User) -> Decimal:
+    """Compute current PnL for a user based on cash + marked-to-market positions."""
+    account = Account.query.filter_by(user_id=user.id).first()
+    if not account:
+        return Decimal("0.00")
+
+    equity = Decimal(account.cash or 0)
+
+    positions = Position.query.filter_by(user_id=user.id).all()
+    for pos in positions:
+        if pos.qty == 0:
+            continue
+        ticker = pos.ticker  # relationship is already on Position
+        if not ticker or ticker.price is None:
+            continue
+        equity += Decimal(pos.qty) * Decimal(ticker.price)
+
+    return equity - START_EQUITY
+
+@app.route("/leaderboard")
+@login_required
+def leaderboard():
+    users = User.query.all()
+
+    rows = []
+    for u in users:
+        pnl = compute_user_pnl(u)
+        rows.append((u, pnl))
+
+    # sort by PnL descending
+    rows.sort(key=lambda tup: tup[1], reverse=True)
+
+    leaderboard_rows = []
+    current = current_user()
+    for rank, (u, pnl) in enumerate(rows, start=1):
+        leaderboard_rows.append({
+            "rank": rank,
+            "username": u.username,
+            "pnl": pnl,
+            "is_current": (current is not None and u.id == current.id),
+        })
+
+    return render_template("leaderboard.html", leaderboard=leaderboard_rows)
 
 if __name__ == '__main__':
     app.run(debug=True)
