@@ -6,7 +6,9 @@ from werkzeug.security import generate_password_hash, check_password_hash
 # db accessor
 db = SQLAlchemy()
 
+
 class User(db.Model):
+    """User class is for creating a table of Users"""
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(64), unique=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
@@ -20,18 +22,21 @@ class User(db.Model):
         return check_password_hash(self.password_hash, password)
 
 class Ticker(db.Model):
+    """User class is for creating a table of Tickers"""
     id = db.Column(db.Integer, primary_key=True)
     symbol = db.Column(db.String(12), unique=True, nullable=False)
     name = db.Column(db.String(64), nullable=True)
     price = db.Column(db.Numeric(12,2), nullable=False, default=Decimal('100.00'))
 
 class Account(db.Model):
+    """User class is for creating a table of Accounts"""
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     cash = db.Column(db.Numeric(14,2), nullable=False, default=Decimal('100000.00'))
     user = db.relationship('User', backref=db.backref('account', uselist=False))
 
 class Order(db.Model):
+    """User class is for creating a table of Orders"""
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     ticker_id = db.Column(db.Integer, db.ForeignKey('ticker.id'), nullable=False)
@@ -44,6 +49,7 @@ class Order(db.Model):
     ticker = db.relationship('Ticker')
 
 class Position(db.Model):
+    """User class is for creating a table of Positions"""
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     ticker_id = db.Column(db.Integer, db.ForeignKey('ticker.id'), nullable=False)
@@ -54,6 +60,7 @@ class Position(db.Model):
     __table_args__ = (db.UniqueConstraint('user_id', 'ticker_id', name='uix_user_ticker'),)
 
 class Trade(db.Model):
+    """User class is for creating a table of Trades"""
     id = db.Column(db.Integer, primary_key=True)
     order_id = db.Column(db.Integer, db.ForeignKey('order.id'), nullable=False)
     price = db.Column(db.Numeric(12,2), nullable=False)
@@ -61,6 +68,7 @@ class Trade(db.Model):
     order = db.relationship('Order')
 
 class WatchlistItem(db.Model):
+    """User class is for creating a table of Watchlist items"""
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     symbol = db.Column(db.String(64), nullable=False)
@@ -68,6 +76,7 @@ class WatchlistItem(db.Model):
     last_notified_price = db.Column(db.Float, nullable=True)
 
 class ScheduledTransaction(db.Model):
+    """User class is for creating a table of Scheduled Transactions"""
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
     # DEPOSIT or WITHDRAW

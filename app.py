@@ -5,35 +5,36 @@ import random
 from functools import wraps
 import re
 import feedparser
-import math
 import io
 import matplotlib
 matplotlib.use("Agg")  # non-GUI backend
 import matplotlib.pyplot as plt
 
-
+# Our entire back end and DB stuff
 from flask import Flask, render_template, request, redirect, url_for, session, abort, render_template_string, make_response, send_file, flash
 from models import db, User, Ticker, Account, Order, Position, Trade, WatchlistItem, ScheduledTransaction
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'dev-insecure-key'  # demo only; change in real use
+app.config['SECRET_KEY'] = 'dev-insecure-key'  # fine for this project, normally would do some security stuff
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///paper.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db.init_app(app)
 
-# Create tables on first request (simple dev setup)
 @app.before_request
 def ensure_db():
+    """Create tables on first request (simple dev setup)"""
     with app.app_context():
         db.create_all()
 
 def current_user():
+    """Get current User"""
     uid = session.get('user_id')
     if not uid:
         return None
     return User.query.get(uid)
 
 def login_required(fn):
+    """Login is requied to use this function, if not then send back to login page"""
     @wraps(fn)
     def wrapper(*args, **kwargs):
         if not current_user():
@@ -45,6 +46,7 @@ def login_required(fn):
 
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
+    """Signup Functionality. Handles Both GET and POST. Allows user to make an account."""
     if request.method == 'POST':
         username = (request.form.get('username') or '').strip()
         password = (request.form.get('password') or '').strip()
@@ -54,7 +56,7 @@ def signup():
             return render_template('login.html', error='Username already taken', mode='signup')
 
         user = User(username=username)
-        user.set_password(password)  # stores salted hash
+        user.set_password(password) 
         db.session.add(user)
         db.session.commit()
 
@@ -69,7 +71,8 @@ def signup():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    if request.method == 'POST':  # <-- fixed
+    """Login Functionality. Handles GET and POST. Allows user to login."""
+    if request.method == 'POST':
         username = (request.form.get('username') or '').strip()
         password = (request.form.get('password') or '').strip()
         if not username or not password:
@@ -87,16 +90,22 @@ def login():
 
 @app.route('/logout')
 def logout():
+    """Logout Functionality"""
     session.clear()
     return redirect(url_for('login'))
 
 # -------- Ticker sync ------------------
 def _tick_prices():
+    """This is the random walk in the change of the ticker price.
+       We use this because using the stock market would have been not so fun
+       for grading purposes."""
+    # Random walk and update DM
     for t in Ticker.query.all():
         drift = Decimal(random.randrange(-50, 51)) / Decimal('100')  # -0.50..+0.50
         t.price = max(Decimal('1.00'), (t.price + drift).quantize(Decimal('0.01')))
     db.session.commit()
 
+    # IF LIMIT ORDER, CHECK IF WE CAN EXECUTE NOW
     open_orders = Order.query.filter_by(status="PENDING", order_type="LMT").all()
     for order in open_orders:
         ticker = Ticker.query.get(order.ticker_id)
@@ -114,6 +123,8 @@ def _tick_prices():
 @app.route('/dash_tick')
 @login_required
 def dash_tick():
+    """Meant for synchronizing the price mnovement in the UI.
+       may be used in other places too."""
     user = current_user()
     # move prices exactly once per tick
     _tick_prices()
@@ -137,24 +148,10 @@ def dash_tick():
 
 # -------- App pages / fragments --------
 
-# @app.route('/')
-# @login_required
-# def dashboard():
-#     # seed demo tickers once
-#     if Ticker.query.count() == 0:
-#         for sym in ['AAPL', 'MSFT', 'GOOG', 'TSLA']:
-#             price = Decimal(random.randrange(80, 250))
-#             db.session.add(Ticker(symbol=sym, price=price))
-#         db.session.commit()
-
-#     user = current_user()
-#     positions = Position.query.filter_by(user_id=user.id).join(Ticker).all()
-#     tickers = Ticker.query.order_by(Ticker.symbol).all()
-#     return render_template('dashboard.html', tickers=tickers, positions=positions)
-
 @app.route('/')
 @login_required
 def dashboard():
+    """Our dashboard"""
     # seed demo tickers once
     if Ticker.query.count() == 0:
         tickers_list = [
@@ -183,6 +180,7 @@ def dashboard():
 @app.route('/search')
 @login_required
 def search_stocks():
+    """Allows us to search for stocks"""
     query = request.args.get('q', '').strip().upper()
     if not query:
         return render_template('_search_results.html', tickers=[], query='')
@@ -195,20 +193,10 @@ def search_stocks():
     
     return render_template('_search_results.html', tickers=tickers, query=query)
 
-@app.route('/prices')
-@login_required
-def prices_partial():
-    # random walk each poll
-    for t in Ticker.query.all():
-        drift = Decimal(random.randrange(-50, 51)) / Decimal('100')  # -0.50..+0.50
-        t.price = max(Decimal('1.00'), (t.price + drift).quantize(Decimal('0.01')))
-    db.session.commit()
-    tickers = Ticker.query.order_by(Ticker.symbol).all()
-    return render_template('_prices.html', tickers=tickers)
-
 @app.route('/positions')
 @login_required
 def positions_partial():
+    """Gets our current positions"""
     user = current_user()
     positions = Position.query.filter_by(user_id=user.id).join(Ticker).all()
     return render_template('_positions.html', positions=positions)
@@ -216,6 +204,7 @@ def positions_partial():
 @app.route('/open_orders')
 @login_required
 def open_orders_partial():
+    """Gets our Open Orders"""
     user = current_user()
     orders = (
         Order.query
@@ -225,12 +214,10 @@ def open_orders_partial():
     )
     return render_template('_open_orders.html', orders=orders)
 
-
-#
-#Added RESET
 @app.route('/reset', methods=['POST'])
 @login_required
 def reset_portfolio():
+    '''Allows us to reset the portfolio to a default amount'''
     user = current_user()
 
     # Delete all positions and trades for the user
@@ -250,6 +237,7 @@ def reset_portfolio():
 @app.route('/portfolio', methods=['GET', 'POST'])
 @login_required
 def portfolio():
+    '''Gets our entire portfolio'''
     user = current_user()
     positions = (
         Position.query
@@ -262,6 +250,7 @@ def portfolio():
 @app.route('/order', methods=['POST'])
 @login_required
 def place_order():
+    ''' places an order '''
     user = current_user()
     side = request.form.get('side')
     order_type = request.form.get('order_type')
@@ -275,9 +264,11 @@ def place_order():
     except ValueError:
       qty = 0
 
+    # Error not found
     if not symbol or qty <= 0 or side not in ('BUY', 'SELL') or order_type not in ('MKT', 'LMT'):
         abort(400)
 
+    # Error not found
     ticker = Ticker.query.filter_by(symbol=symbol).first()
     if not ticker:
         abort(400)
@@ -287,6 +278,7 @@ def place_order():
         try:
             limit_price = Decimal(limit_price_raw)
         except Exception:
+            # Error not found
             abort(400)
 
     order = Order(
@@ -317,7 +309,6 @@ def place_order():
         execute_order(order, price, acct)
 
     # return a fresh form fragment
-    #return render_template('_order_form.html', tickers=Ticker.query.order_by(Ticker.symbol).all(), success=True)
     order_form_html = render_template('_order_form.html',
                                   tickers=Ticker.query.order_by(Ticker.symbol).all(),
                                   success=True)
@@ -325,6 +316,7 @@ def place_order():
     return order_form_html + cash_html
 
 def execute_order(order: Order, price: Decimal, account: Account) -> None:
+    """Execute an Order that has been placed"""
     # record trade
     db.session.add(Trade(order_id=order.id, price=price, qty=order.qty))
 
@@ -358,7 +350,6 @@ def execute_order(order: Order, price: Decimal, account: Account) -> None:
         else:
             pos.qty = new_qty
             # avg price unchanged when partially selling
-            # if you wanted FIFO/LIFO, you'd compute differently
 
         account.cash = (account.cash + proceeds).quantize(Decimal('0.01'))
 
@@ -369,6 +360,7 @@ def execute_order(order: Order, price: Decimal, account: Account) -> None:
 @app.route('/transactions', methods=['GET', 'POST'])
 @login_required
 def transactions_partial():
+    '''Get transactions'''
     user = current_user()
     trades = Trade.query.join(Order).filter(Order.user_id == user.id).order_by(Trade.id.desc()).all()
     return render_template('_transactions.html', trades=trades)
@@ -377,6 +369,7 @@ def transactions_partial():
 @app.route('/watchlist', methods=['GET', 'POST'])
 @login_required
 def watchlist():
+    '''Get Watchlist'''
     user = current_user()
 
     if request.method == 'POST':
@@ -556,13 +549,13 @@ def update_watchlist_name():
     if not new_name:
         new_name = "My Watchlist"
 
-    # optional: enforce max length
+    # enforce max length
     new_name = new_name[:64]
 
     user.watchlist_name = new_name
     db.session.commit()
 
-    # If you use HTMX, we can return just the header fragment:
+    # return just the header fragment
     return render_template("_watchlist_header.html", user=user)
 
 def render_performance_chart_html(user):
@@ -671,10 +664,6 @@ def account_page():
         upcoming=upcoming,
         processed=processed,
     )
-    html += render_template("_cash_balance_oob.html", user=user)
-
-    return html
-
 
 def process_due_scheduled_transactions(user_id: int) -> None:
     """Apply all PENDING scheduled transactions for this user
