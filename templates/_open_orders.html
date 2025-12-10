@@ -1,0 +1,35 @@
+<table class="table table-sm table-striped">
+  <thead>
+    <tr>
+      <th>Side</th>
+      <th>Symbol</th>
+      <th>Qty</th>
+      <th>Limit Price</th>
+      <th>Status</th>
+    </tr>
+  </thead>
+
+  <tbody>
+    {% for o in orders %}
+      <tr>
+        <td>{{ o.side }}</td>
+        <td>{{ o.ticker.symbol }}</td>
+        <td>{{ o.qty }}</td>
+        <td>
+          {% if o.limit_price %}
+            ${{ '%.2f'|format(o.limit_price) }}
+          {% else %}
+            —
+          {% endif %}
+        </td>
+        <td>{{ o.status }}</td>
+      </tr>
+    {% else %}
+      <tr>
+        <td colspan="5" class="text-center text-muted">
+          No open limit orders.
+        </td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>

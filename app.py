@@ -97,6 +97,20 @@ def _tick_prices():
         t.price = max(Decimal('1.00'), (t.price + drift).quantize(Decimal('0.01')))
     db.session.commit()
 
+    open_orders = Order.query.filter_by(status="PENDING", order_type="LMT").all()
+    for order in open_orders:
+        ticker = Ticker.query.get(order.ticker_id)
+        current_price = ticker.price
+
+        if order.side == "BUY" and current_price <= order.limit_price:
+            acct = Account.query.filter_by(user_id=order.user_id).first()
+            execute_order(order, current_price, acct)
+
+        elif order.side == "SELL" and current_price >= order.limit_price:
+            acct = Account.query.filter_by(user_id=order.user_id).first()
+            execute_order(order, current_price, acct)
+
+
 @app.route('/dash_tick')
 @login_required
 def dash_tick():
@@ -198,6 +212,20 @@ def positions_partial():
     user = current_user()
     positions = Position.query.filter_by(user_id=user.id).join(Ticker).all()
     return render_template('_positions.html', positions=positions)
+
+@app.route('/open_orders')
+@login_required
+def open_orders_partial():
+    user = current_user()
+    orders = (
+        Order.query
+        .filter_by(user_id=user.id, status='PENDING')
+        .order_by(Order.id.desc())
+        .all()
+    )
+    return render_template('_open_orders.html', orders=orders)
+
+
 #
 #Added RESET
 @app.route('/reset', methods=['POST'])
