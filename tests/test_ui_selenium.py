@@ -104,7 +104,6 @@ def test_dashboard_shows_tickers_after_signup(driver):
     signup_and_login(driver)
     body_text = driver.find_element(By.TAG_NAME, "body").text
 
-    # Your app seeds these symbols in dashboard() when Ticker.count()==0
     # (AAPL, MSFT, GOOG, TSLA, AMZN, META, NVDA, NFLX, AMD, INTC)
     assert "AAPL" in body_text
     assert "MSFT" in body_text
@@ -124,13 +123,12 @@ def test_add_and_remove_watchlist_item_via_ui(driver):
     symbol_input.send_keys("AAPL")
     symbol_input.submit()
 
-    time.sleep(0.5)  # small wait for reload/HTMX if used
+    time.sleep(0.5)
 
     body_text = driver.find_element(By.TAG_NAME, "body").text
     assert "AAPL" in body_text
 
     # Remove via the remove form/button (POST /remove_watch with symbol)
-    # You'll likely need to adjust this locator based on your template
     remove_buttons = driver.find_elements(By.XPATH, "//form[contains(@action, '/remove_watch')]//button")
     assert remove_buttons, "No remove button found for watchlist item"
     remove_buttons[0].click()
