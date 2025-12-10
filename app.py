@@ -1,5 +1,5 @@
 import base64
-from datetime import datetime
+from datetime import datetime, date
 from decimal import Decimal
 import random
 from functools import wraps
@@ -12,8 +12,8 @@ matplotlib.use("Agg")  # non-GUI backend
 import matplotlib.pyplot as plt
 
 
-from flask import Flask, render_template, request, redirect, url_for, session, abort, render_template_string, make_response, send_file
-from models import db, User, Ticker, Account, Order, Position, Trade, WatchlistItem
+from flask import Flask, render_template, request, redirect, url_for, session, abort, render_template_string, make_response, send_file, flash
+from models import db, User, Ticker, Account, Order, Position, Trade, WatchlistItem, ScheduledTransaction
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'dev-insecure-key'  # demo only; change in real use
@@ -611,8 +611,119 @@ def performance_chart_png():
     # This returns HTML, not raw PNG – by design
     return render_performance_chart_html(user)
 
+@app.route("/account")
+@login_required
+def account_page():
+    user = current_user()
+
+    # This makes sure anything with date <= today has occurred
+    process_due_scheduled_transactions(user.id)
+
+    account = Account.query.filter_by(user_id=user.id).first()
+
+    upcoming = (
+        ScheduledTransaction.query
+        .filter_by(user_id=user.id, status="PENDING")
+        .order_by(ScheduledTransaction.scheduled_date.asc())
+        .all()
+    )
+
+    processed = (
+        ScheduledTransaction.query
+        .filter_by(user_id=user.id, status="PROCESSED")
+        .order_by(ScheduledTransaction.processed_at.desc())
+        .limit(10)
+        .all()
+    )
+
+    return render_template(
+        "account.html",
+        user=user,
+        account=account,
+        upcoming=upcoming,
+        processed=processed,
+    )
+    html += render_template("_cash_balance_oob.html", user=user)
+
+    return html
 
 
+def process_due_scheduled_transactions(user_id: int) -> None:
+    """Apply all PENDING scheduled transactions for this user
+    whose scheduled_date is today or earlier.
+    """
+    today = date.today()
+
+    # Get user's account
+    account = Account.query.filter_by(user_id=user_id).first()
+    if not account:
+        return
+
+    txns = (
+        ScheduledTransaction.query
+        .filter_by(user_id=user_id, status="PENDING")
+        .filter(ScheduledTransaction.scheduled_date <= today)
+        .all()
+    )
+
+    for tx in txns:
+        amt = Decimal(tx.amount)
+
+        if tx.tx_type == "DEPOSIT":
+            account.cash = account.cash + amt
+        elif tx.tx_type == "WITHDRAW":
+            account.cash = account.cash - amt
+
+        tx.status = "PROCESSED"
+        tx.processed_at = today
+
+    if txns:
+        db.session.commit()
+
+@app.route("/schedule-transaction", methods=["POST"])
+@login_required
+def schedule_transaction():
+    user = current_user()
+
+    tx_type = request.form.get("tx_type", "").strip().upper()
+    amount_raw = request.form.get("amount", "").strip()
+    date_raw = request.form.get("scheduled_date", "").strip()
+
+    if tx_type not in ("DEPOSIT", "WITHDRAW"):
+        flash("Invalid transaction type", "error")
+        return redirect(url_for("dashboard"))
+
+    try:
+        amount = Decimal(amount_raw)
+        assert amount > 0
+    except Exception:
+        flash("Invalid amount", "error")
+        return redirect(url_for("dashboard"))
+
+    try:
+        year, month, day = map(int, date_raw.split("-"))
+        sched_date = date(year, month, day)
+    except Exception:
+        flash("Invalid date", "error")
+        return redirect(url_for("dashboard"))
+
+    # Create scheduled transaction
+    tx = ScheduledTransaction(
+        user_id=user.id,
+        tx_type=tx_type,
+        amount=amount,
+        scheduled_date=sched_date,
+        status="PENDING",
+    )
+    db.session.add(tx)
+    db.session.commit()
+
+    flash("Scheduled transaction created.", "success")
+    return redirect(url_for("dashboard"))
+
+@app.before_request
+def apply_scheduled_for_logged_in_user():
+    process_due_scheduled_transactions(current_user().id)
 
 if __name__ == '__main__':
     app.run(debug=True)
