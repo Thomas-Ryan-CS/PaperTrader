@@ -56,7 +56,6 @@ def test_insufficient_cash_cancels_buy(client, auth_user):
         assert order is not None
         assert order.status == "CANCELLED"
 
-        # Your current app *does* leave a Position row with qty = 0
         pos = Position.query.first()
         assert pos is not None
         assert pos.qty == 0
